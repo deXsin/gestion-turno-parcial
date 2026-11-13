@@ -5,7 +5,7 @@ const { enviarCorreo } = require('../services/emailservice');
 
 // URL base del frontend. Se puede configurar en el archivo .env.
 const FRONTEND_URL = process.env.FRONTEND_URL ||
-    'http://127.0.0.1:5500/gestion-turnos/frontend';
+    'http://127.0.0.1:5500/frontend';
 
 // REGISTRO DE PACIENTE
 async function registrarPaciente(req, res) {

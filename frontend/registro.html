@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Cuenta | Gestión de Turnos</title>
+    <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+    <main class="contenedor">
+        <section class="tarjeta">
+            <h1>Crear cuenta</h1>
+            <p>Seleccioná tu tipo de usuario y completá tus datos.</p>
+
+            <form id="formRegistro">
+                <label for="tipoUsuario">Tipo de cuenta</label>
+                <select id="tipoUsuario" name="tipoUsuario">
+                    <option value="paciente">Paciente</option>
+                    <option value="medico">Médico (con matrícula registrada)</option>
+                </select>
+
+                <div id="camposPaciente">
+                    <label for="dni_paciente">DNI</label>
+                    <input type="number" id="dni_paciente" placeholder="Ej: 30100101">
+
+                    <label for="nombre_paciente">Nombre</label>
+                    <input type="text" id="nombre_paciente" placeholder="Tu nombre">
+
+                    <label for="apellido_paciente">Apellido</label>
+                    <input type="text" id="apellido_paciente" placeholder="Tu apellido">
+
+                    <label for="fec_nac_paciente">Fecha de nacimiento</label>
+                    <input type="date" id="fec_nac_paciente">
+                </div>
+
+                <div id="camposMedico" style="display: none;">
+                    <label for="matricula_medico">Matrícula profesional</label>
+                    <input type="number" id="matricula_medico" placeholder="Ej: 1001">
+                </div>
+
+                <label for="email">Correo electrónico</label>
+                <input type="email" id="email" placeholder="usuario@correo.com" required>
+
+                <label for="password">Contraseña (mínimo 8 caracteres)</label>
+                <input type="password" id="password" minlength="8" placeholder="Mínimo 8 caracteres" required>
+
+                <button type="submit" id="btnRegistro">Registrarme</button>
+            </form>
+
+            <p id="mensaje" role="status" aria-live="polite"></p>
+            <p class="enlace-aux"><a href="index.html">¿Ya tenés cuenta? Iniciá sesión acá</a></p>
+        </section>
+    </main>
+
+    <script src="js/api.js"></script>
+    <script src="js/registro.js"></script>
+</body>
+</html>

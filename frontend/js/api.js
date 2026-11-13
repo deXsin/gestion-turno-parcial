@@ -36,5 +36,38 @@ async function obtenerTurnos() {
 
     return datos;
 }
- 
- 
+
+async function registrarPaciente(datosPaciente) {
+    const respuesta = await fetch(`${API_URL}/auth/registro/paciente`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(datosPaciente)
+    });
+    const datos = await respuesta.json();
+    if (!respuesta.ok) {
+        throw new Error(datos.error || 'No se pudo completar el registro de paciente');
+    }
+    return datos;
+}
+
+async function registrarMedico(datosMedico) {
+    const respuesta = await fetch(`${API_URL}/auth/registro/medico`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(datosMedico)
+    });
+    const datos = await respuesta.json();
+    if (!respuesta.ok) {
+        throw new Error(datos.error || 'No se pudo completar el registro de médico');
+    }
+    return datos;
+}
+
+async function verificarCorreo(token) {
+    const respuesta = await fetch(`${API_URL}/auth/verificar-email?token=${encodeURIComponent(token)}`);
+    const datos = await respuesta.json();
+    if (!respuesta.ok) {
+        throw new Error(datos.error || 'No se pudo verificar el correo');
+    }
+    return datos;
+}
