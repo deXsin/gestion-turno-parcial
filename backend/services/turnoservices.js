@@ -134,6 +134,15 @@ async function reprogramar(id_turno, fecha_turno, hora_turno) {
     return resultado;
 }
 
+// 8. VERIFICAR SI UN MÉDICO ESTÁ HABILITADO PARA UNA PRÁCTICA
+async function verificarMedicoHabilitado(matricula, id_practica) {
+    const [habilitado] = await db.execute(
+        'SELECT 1 FROM practica_medico WHERE matricula_medico = ? AND id_practica = ?',
+        [matricula, id_practica]
+    );
+    return habilitado.length > 0;
+}
+
 module.exports = {
     obtenerTodos,
     obtenerPorId,
@@ -141,5 +150,6 @@ module.exports = {
     cancelar,
     obtenerPorPaciente,
     confirmar,
-    reprogramar
+    reprogramar,
+    verificarMedicoHabilitado
 };

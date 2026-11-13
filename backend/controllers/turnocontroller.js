@@ -1,6 +1,3 @@
-const db = require('../config/database');
-
-// Importas tu función validadora normal
 const { validarNuevoTurno, validarReprogramacionTurno } = require('../validators/turnoValidators');
 const turnoService = require('../services/turnoservices');
 
@@ -162,11 +159,8 @@ async function confirmarTurno(req, res) {
         }
 
         // Controlar que el médico esté autorizado para realizar la práctica del turno
-        const [habilitado] = await db.execute(
-            'SELECT 1 FROM practica_medico WHERE matricula_medico = ? AND id_practica = ?',
-            [matricula, turnoActual.id_practica]
-        );
-        if (habilitado.length === 0) {
+        const estaHabilitado = await turnoService.verificarMedicoHabilitado(matricula, turnoActual.id_practica);
+        if (!estaHabilitado) {
             return res.status(400).json({
                 error: `El médico con matrícula ${matricula} no realiza la práctica #${turnoActual.id_practica} solicitada en este turno`
             });
