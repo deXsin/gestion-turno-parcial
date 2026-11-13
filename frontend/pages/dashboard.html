@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de administración | Gestión de Turnos</title>
+    <link rel="stylesheet" href="../css/estilos.css">
+</head>
+<body>
+
+    <div class="dashboard">
+
+        <aside class="sidebar">
+            <h2>Gestión de Turnos</h2>
+
+            <nav>
+                <a href="dashboard.html" class="activo">Inicio</a>
+                <a href="#turnos">Turnos</a>
+                <button id="cerrarSesion" type="button">
+                    Cerrar sesión
+                </button>
+            </nav>
+        </aside>
+
+
+        <main class="contenido">
+            <header class="encabezado">
+                <h1>Panel principal</h1>
+                <p id="datosUsuario">Cargando usuario...</p>
+            </header>
+
+
+            <section class="bienvenida">
+                <h2>Bienvenida/o al sistema</h2>
+                <p>Desde aquí podrás gestionar los turnos médicos.</p>
+            </section>
+
+
+            <section id="turnos" class="seccion-turnos">
+                <h2>Gestión de turnos</h2>
+                <div class="tabla-contenedor">
+                    <table class="tabla-turnos">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Fecha</th>
+                                <th>Hora</th>
+                                <th>DNI Paciente</th>
+                                <th>Práctica</th>
+                                <th>Medio</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaTurnosBody">
+                            <tr>
+                                <td colspan="7">Cargando turnos...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+
+
+    </div>
+
+
+    <script src="../js/api.js"></script>
+    <script src="../js/dashboard.js"></script>
+
+</body>
+</html>
