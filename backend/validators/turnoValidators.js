@@ -1,5 +1,9 @@
 const db = require('../config/database');
 
+/**
+ * Obtiene la fecha y hora actual en zona horaria local de Argentina.
+ * Utilizado para evitar que se reserven o reprogramen turnos en momentos ya pasados.
+ */
 function obtenerFechaHoraActual() {
     const ahora = new Date();
     const anio = ahora.getFullYear();
@@ -13,24 +17,27 @@ function obtenerFechaHoraActual() {
     };
 }
 
-// Recibe los datos del body
+/**
+ * Validador principal para la creación de un nuevo turno médico.
+ * Aplica las reglas de negocio de la clínica y las validaciones solicitadas para el parcial.
+ */
 async function validarNuevoTurno(datos) {
     const {
         fecha_turno, hora_turno, medio_solicitado, dni_paciente, 
         id_practica, id_equipo, id_disponibilidad
     } = datos;
 
-    // 1. Campos obligatorios
+    // Regla 1: Campos obligatorios presentes
     if (!fecha_turno || !hora_turno || !medio_solicitado || !dni_paciente || !id_practica || !id_equipo || !id_disponibilidad) {
         return { valido: false, status: 400, error: 'Todos los campos obligatorios deben estar presentes' };
     }
 
-    // Validar formato de DNI (7 u 8 dígitos numéricos)
+    // Regla 2: Formato de DNI argentino (numérico de 7 u 8 dígitos)
     if (!/^\d{7,8}$/.test(String(dni_paciente).trim())) {
         return { valido: false, status: 400, error: 'El DNI del paciente debe tener entre 7 y 8 dígitos numéricos' };
     }
 
-    // 2. Fecha y hora no anteriores al momento actual (hora local Argentina)
+    // Regla 3: No permitir fechas pasadas ni horarios anteriores al actual en el mismo día
     const { hoy, horaActual } = obtenerFechaHoraActual();
     if (fecha_turno < hoy) {
         return { valido: false, status: 400, error: 'La fecha del turno no puede ser anterior al día de hoy' };
@@ -39,7 +46,7 @@ async function validarNuevoTurno(datos) {
         return { valido: false, status: 400, error: 'Para el día de hoy debés elegir un horario posterior a la hora actual' };
     }
 
-    // 3. Franja horaria de atención
+    // Regla 4: Control de franjas horarias y días de atención de la clínica
     const diaSemana = new Date(`${fecha_turno}T00:00:00`).getDay();
     if (diaSemana === 0) {
         return { valido: false, status: 400, error: 'El centro médico permanece cerrado los domingos' };
@@ -54,13 +61,13 @@ async function validarNuevoTurno(datos) {
         }
     }
 
-    // 4. Verificar paciente en la BD
+    // Regla 5: Verificar que el paciente exista en el padrón de la base de datos
     const [paciente] = await db.execute('SELECT dni_paciente FROM paciente WHERE dni_paciente = ?', [dni_paciente]);
     if (paciente.length === 0) {
         return { valido: false, status: 404, error: 'El DNI no corresponde a un paciente registrado' };
     }
 
-    // 5. Evitar que un paciente tenga dos turnos superpuestos (misma fecha y hora no cancelado)
+    // VALIDACIÓN NUEVA A: Evitar que un paciente tenga dos turnos superpuestos (misma fecha y hora activos)
     const [turnosPaciente] = await db.execute(
         `SELECT id_turno FROM turno 
          WHERE dni_paciente = ? AND fecha_turno = ? AND hora_turno = ? AND estado_turno != 'Cancelado'`,
@@ -70,7 +77,7 @@ async function validarNuevoTurno(datos) {
         return { valido: false, status: 409, error: 'El paciente ya tiene un turno asignado en esa misma fecha y horario' };
     }
 
-    // 6. Controlar que el equipo corresponda a la práctica solicitada
+    // VALIDACIÓN NUEVA B: Controlar que el equipo seleccionado realice la práctica solicitada
     const [relacionEquipo] = await db.execute(
         'SELECT id_practica FROM practica_equipo WHERE id_practica = ? AND id_equipo = ?',
         [id_practica, id_equipo]
@@ -79,7 +86,7 @@ async function validarNuevoTurno(datos) {
         return { valido: false, status: 400, error: 'El equipo seleccionado no corresponde a la práctica médica solicitada' };
     }
 
-    // 7. Evitar dos turnos en el mismo horario para el mismo equipo/consultorio
+    // VALIDACIÓN NUEVA C: Evitar superposición de uso del mismo equipo o consultorio a la misma hora
     const [turnosEquipo] = await db.execute(
         `SELECT id_turno FROM turno 
          WHERE id_equipo = ? AND fecha_turno = ? AND hora_turno = ? AND estado_turno != 'Cancelado'`,
@@ -89,15 +96,19 @@ async function validarNuevoTurno(datos) {
         return { valido: false, status: 409, error: 'Ya existe otro turno reservado para esa práctica/equipo en el mismo horario' };
     }
 
-    // Si pasó todas las validaciones, devolvemos true
     return { valido: true };
 }
 
+/**
+ * Validador para la reprogramación de turnos (Mejora funcional).
+ * Aplica las mismas restricciones evitando que coincida con otros turnos del paciente o del equipo.
+ */
 async function validarReprogramacionTurno(turnoActual, nuevaFecha, nuevaHora) {
     if (!nuevaFecha || !nuevaHora) {
         return { valido: false, status: 400, error: 'Debés indicar la nueva fecha y el nuevo horario' };
     }
 
+    // Control de fecha no pasada
     const { hoy, horaActual } = obtenerFechaHoraActual();
     if (nuevaFecha < hoy) {
         return { valido: false, status: 400, error: 'La fecha del turno no puede ser anterior al día de hoy' };
@@ -106,6 +117,7 @@ async function validarReprogramacionTurno(turnoActual, nuevaFecha, nuevaHora) {
         return { valido: false, status: 400, error: 'Para el día de hoy debés elegir un horario posterior a la hora actual' };
     }
 
+    // Control de atención según día de semana
     const diaSemana = new Date(`${nuevaFecha}T00:00:00`).getDay();
     if (diaSemana === 0) {
         return { valido: false, status: 400, error: 'El centro médico permanece cerrado los domingos' };
@@ -117,6 +129,7 @@ async function validarReprogramacionTurno(turnoActual, nuevaFecha, nuevaHora) {
         return { valido: false, status: 400, error: 'El horario de atención los sábados es de 08:00 a 14:00' };
     }
 
+    // Verificar que el paciente no tenga otro turno activo a esa misma hora
     const [superpuestoPaciente] = await db.execute(
         `SELECT id_turno FROM turno 
          WHERE dni_paciente = ? AND fecha_turno = ? AND hora_turno = ? 
@@ -127,6 +140,7 @@ async function validarReprogramacionTurno(turnoActual, nuevaFecha, nuevaHora) {
         return { valido: false, status: 409, error: 'El paciente ya tiene otro turno en esa fecha y horario' };
     }
 
+    // Verificar que el equipo no esté ocupado por otro turno
     const [superpuestoEquipo] = await db.execute(
         `SELECT id_turno FROM turno 
          WHERE id_equipo = ? AND fecha_turno = ? AND hora_turno = ? 

@@ -49,7 +49,7 @@ async function obtenerTurnoPorId(req, res) {
 // 3. CREAR TURNO
 async function crearTurno(req, res) {
     try {
-        // Si quien crea el turno es un Paciente (rol 3), solo puede crearlo para su propio DNI
+        // Control de perfil: Si quien crea el turno es Paciente (rol 3), solo puede reservar para su propio DNI
         if (req.usuario && Number(req.usuario.id_rol) === 3) {
             if (Number(req.body.dni_paciente) !== Number(req.usuario.dni_paciente)) {
                 return res.status(403).json({
@@ -58,7 +58,7 @@ async function crearTurno(req, res) {
             }
         }
 
-        // Preparar los datos con los valores por defecto
+        // Estado inicial del turno: siempre se crea como 'Reservado'
         const datosTurno = {
             ...req.body,
             estado_turno: 'Reservado',
@@ -66,7 +66,7 @@ async function crearTurno(req, res) {
             medico_confirmacion: null
         };
 
-        // Llamar al servicio para que lo guarde en la BD
+        // Guardar en la base de datos a través del servicio
         const resultado = await turnoService.crear(datosTurno);
 
         res.status(201).json({
@@ -92,18 +92,19 @@ async function cancelarTurno(req, res) {
 
         const turnoActual = turnos[0];
 
-        // Si es Paciente (rol 3), verificar que el turno sea suyo
+        // Control de perfil: Paciente solo puede cancelar sus propios turnos
         if (req.usuario && Number(req.usuario.id_rol) === 3) {
             if (Number(turnoActual.dni_paciente) !== Number(req.usuario.dni_paciente)) {
                 return res.status(403).json({ error: 'No tenés permiso para cancelar el turno de otro paciente' });
             }
         }
 
-        // Impedir que se modifique/cancele un turno que ya fue cancelado o expiró
+        // Impedir que se modifique o cancele un turno que ya fue cancelado o que ya expiró
         if (turnoActual.estado_turno === 'Cancelado' || turnoActual.estado_turno === 'Expirado') {
             return res.status(400).json({ error: `No se puede cancelar un turno en estado ${turnoActual.estado_turno}` });
         }
 
+        // Ejecutar actualización lógica en base de datos
         await turnoService.cancelar(id);
         res.json({ mensaje: 'Turno cancelado exitosamente' });
 
@@ -118,7 +119,7 @@ async function obtenerTurnosPorPaciente(req, res) {
     try {
         const { dni } = req.params;
 
-        // Si es Paciente (rol 3), solo puede consultar sus propios turnos
+        // Control de perfil: Paciente solo puede consultar su propio historial
         if (req.usuario && Number(req.usuario.id_rol) === 3) {
             if (Number(dni) !== Number(req.usuario.dni_paciente)) {
                 return res.status(403).json({ error: 'No tenés permiso para ver los turnos de otro paciente' });
@@ -137,6 +138,7 @@ async function obtenerTurnosPorPaciente(req, res) {
 async function confirmarTurno(req, res) {
     try {
         const { id } = req.params;
+        // La matrícula se toma del body (Admin) o de la sesión del médico autenticado
         const matricula = req.body.medico_confirmacion || (req.usuario && req.usuario.matricula_medico);
 
         if (!matricula) {
@@ -150,7 +152,7 @@ async function confirmarTurno(req, res) {
 
         const turnoActual = turnos[0];
 
-        // Impedir que se modifique un turno que ya fue cancelado o expiró
+        // Validar que el turno no esté cancelado, expirado ni ya confirmado
         if (turnoActual.estado_turno === 'Cancelado' || turnoActual.estado_turno === 'Expirado') {
             return res.status(400).json({ error: `No se puede confirmar un turno en estado ${turnoActual.estado_turno}` });
         }
@@ -159,7 +161,7 @@ async function confirmarTurno(req, res) {
             return res.status(400).json({ error: 'El turno ya se encuentra confirmado' });
         }
 
-        // Controlar que el médico pueda realizar la práctica solicitada en ese turno
+        // Controlar que el médico esté autorizado para realizar la práctica del turno
         const [habilitado] = await db.execute(
             'SELECT 1 FROM practica_medico WHERE matricula_medico = ? AND id_practica = ?',
             [matricula, turnoActual.id_practica]
@@ -170,6 +172,7 @@ async function confirmarTurno(req, res) {
             });
         }
 
+        // Confirmar turno guardando fecha/hora y matrícula
         await turnoService.confirmar(id, matricula);
         res.json({ mensaje: 'Turno confirmado exitosamente' });
     } catch (error) {
@@ -178,7 +181,7 @@ async function confirmarTurno(req, res) {
     }
 }
 
-// 7. REPROGRAMAR TURNO
+// 7. REPROGRAMAR TURNO (Mejora funcional)
 async function reprogramarTurno(req, res) {
     try {
         const { id } = req.params;
@@ -191,23 +194,25 @@ async function reprogramarTurno(req, res) {
 
         const turnoActual = turnos[0];
 
-        // Si es Paciente (rol 3), solo puede reprogramar sus propios turnos
+        // Control de perfil: Paciente solo reprograma sus propios turnos
         if (req.usuario && Number(req.usuario.id_rol) === 3) {
             if (Number(turnoActual.dni_paciente) !== Number(req.usuario.dni_paciente)) {
                 return res.status(403).json({ error: 'No tenés permiso para reprogramar el turno de otro paciente' });
             }
         }
 
-        // Impedir que se modifique un turno que ya fue cancelado o expiró
+        // Impedir reprogramar si el turno fue cancelado o expiró
         if (turnoActual.estado_turno === 'Cancelado' || turnoActual.estado_turno === 'Expirado') {
             return res.status(400).json({ error: `No se puede reprogramar un turno en estado ${turnoActual.estado_turno}` });
         }
 
+        // Aplicar todas las validaciones de negocio a la nueva fecha y hora
         const validacion = await validarReprogramacionTurno(turnoActual, fecha_turno, hora_turno);
         if (validacion.valido === false) {
             return res.status(validacion.status).json({ error: validacion.error });
         }
 
+        // Actualizar en base de datos
         await turnoService.reprogramar(id, fecha_turno, hora_turno);
         res.json({ mensaje: 'Turno reprogramado exitosamente' });
     } catch (error) {

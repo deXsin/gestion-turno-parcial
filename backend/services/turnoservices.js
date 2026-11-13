@@ -29,6 +29,7 @@ async function actualizarTurnosExpirados() {
 
 // 1. OBTENER TODOS (con filtros opcionales y filtro por especialidad del médico)
 async function obtenerTodos(filtros = {}) {
+    // Primero actualiza turnos pasados al estado 'Expirado'
     await actualizarTurnosExpirados();
     let sql = `
         SELECT t.*, p.nombre_practica
@@ -38,12 +39,14 @@ async function obtenerTodos(filtros = {}) {
     `;
     const params = [];
 
+    // Filtro automático: si consulta un médico, solo ve turnos de las prácticas que él atiende
     if (filtros.matricula_medico) {
         sql += ` AND t.id_practica IN (
             SELECT pm.id_practica FROM practica_medico pm WHERE pm.matricula_medico = ?
         )`;
         params.push(filtros.matricula_medico);
     }
+    // Filtros opcionales enviados desde la barra de búsqueda del frontend
     if (filtros.fecha) {
         sql += ' AND t.fecha_turno = ?';
         params.push(filtros.fecha);
@@ -62,7 +65,6 @@ async function obtenerTodos(filtros = {}) {
     return turnos;
 }
 
-
 // 2. OBTENER POR ID
 async function obtenerPorId(id) {
     await actualizarTurnosExpirados();
@@ -75,7 +77,6 @@ async function obtenerPorId(id) {
 
 // 3. CREAR TURNO
 async function crear(datosTurno) {
-    // Extraemos los datos del objeto que nos pasará el controlador
     const {
         fecha_turno, hora_turno, medio_solicitado, estado_turno, 
         fecha_confirmacion, medico_confirmacion, dni_paciente, 
@@ -92,9 +93,8 @@ async function crear(datosTurno) {
     return resultado;
 }
 
-//4. CANCELAR TURNO
+// 4. CANCELAR TURNO (Baja lógica: no se borra la fila, se cambia el estado a 'Cancelado')
 async function cancelar(id_turno) {
-    // Solo actualizamos el estado, no borramos el registro de la BD
     const [resultado] = await db.execute(
         "UPDATE turno SET estado_turno = 'Cancelado' WHERE id_turno = ?",
         [id_turno]
@@ -102,7 +102,7 @@ async function cancelar(id_turno) {
     return resultado;
 }
 
-//5. OBTENER TURNOS POR PACIENTE
+// 5. OBTENER TURNOS POR PACIENTE
 async function obtenerPorPaciente(dni_paciente) {
     await actualizarTurnosExpirados();
     const [turnos] = await db.execute(
@@ -116,9 +116,8 @@ async function obtenerPorPaciente(dni_paciente) {
     return turnos;
 }
     
-//6. CONFIRMAR TURNO
+// 6. CONFIRMAR TURNO (Guarda la matrícula médica y la fecha/hora actual de confirmación)
 async function confirmar(id_turno, medico_confirmacion) {
-    // Cambiamos el estado, guardamos la fecha actual y la matrícula del médico
     const [resultado] = await db.execute(
         "UPDATE turno SET estado_turno = 'Confirmado', fecha_confirmacion = NOW(), medico_confirmacion = ? WHERE id_turno = ?",
         [medico_confirmacion, id_turno]
@@ -126,7 +125,7 @@ async function confirmar(id_turno, medico_confirmacion) {
     return resultado;
 }
 
-//7. REPROGRAMAR TURNO
+// 7. REPROGRAMAR TURNO (Actualiza fecha/hora y restablece a 'Reservado')
 async function reprogramar(id_turno, fecha_turno, hora_turno) {
     const [resultado] = await db.execute(
         "UPDATE turno SET fecha_turno = ?, hora_turno = ?, estado_turno = 'Reservado', fecha_confirmacion = NULL, medico_confirmacion = NULL WHERE id_turno = ?",
