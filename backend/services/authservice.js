@@ -4,7 +4,7 @@ const bcrypt = require('bcryptjs');
 
 async function verificarCredenciales(email, password) {
     const [usuarios] = await db.execute(
-        `SELECT id_usuario, email, password_hash, id_rol, activo, email_verificado
+        `SELECT id_usuario, email, password_hash, id_rol, activo, email_verificado, dni_paciente, matricula_medico
          FROM usuario
          WHERE email = ?`,
         [email]
@@ -36,7 +36,9 @@ async function verificarCredenciales(email, password) {
     return {
         id_usuario: usuario.id_usuario,
         email: usuario.email,
-        id_rol: usuario.id_rol
+        id_rol: usuario.id_rol,
+        dni_paciente: usuario.dni_paciente,
+        matricula_medico: usuario.matricula_medico
     };
 }
 

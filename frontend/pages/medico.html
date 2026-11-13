@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Médico | Gestión de Turnos</title>
+    <link rel="stylesheet" href="../css/estilos.css">
+</head>
+<body>
+    <div class="dashboard">
+        <aside class="sidebar">
+            <h2>Gestión de Turnos</h2>
+            <nav>
+                <a href="medico.html" class="activo">Agenda Médica</a>
+                <button id="cerrarSesion" type="button">Cerrar sesión</button>
+            </nav>
+        </aside>
+
+        <main class="contenido">
+            <header class="encabezado">
+                <h1>Panel de Médico</h1>
+                <p id="datosUsuario">Cargando médico...</p>
+            </header>
+
+            <section class="bienvenida">
+                <h2>Gestión de Agenda</h2>
+                <p>Desde aquí podés consultar los turnos programados, confirmarlos con tu matrícula o cancelarlos.</p>
+                <p id="mensajeAccion" class="mensaje-accion" role="status" aria-live="polite"></p>
+            </section>
+
+            <section class="seccion-turnos">
+                <h2>Turnos del Consultorio</h2>
+
+                <form id="formFiltros" class="barra-filtros">
+                    <input type="date" id="filtroFecha" title="Filtrar por fecha">
+                    <select id="filtroEstado">
+                        <option value="">Todos los estados</option>
+                        <option value="Reservado">Reservado</option>
+                        <option value="Confirmado">Confirmado</option>
+                        <option value="Cancelado">Cancelado</option>
+                    </select>
+                    <input type="number" id="filtroDni" placeholder="DNI del paciente">
+                    <button type="submit">Filtrar</button>
+                    <button type="button" id="btnLimpiarFiltros" class="btn-secundario">Limpiar</button>
+                </form>
+
+                <div class="tabla-contenedor">
+                    <table class="tabla-turnos">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Fecha</th>
+                                <th>Hora</th>
+                                <th>DNI Paciente</th>
+                                <th>Práctica</th>
+                                <th>Estado</th>
+                                <th>Médico Confirm.</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaTurnosBody">
+                            <tr>
+                                <td colspan="8">Cargando turnos...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script src="../js/medico.js"></script>
+</body>
+</html>

@@ -31,13 +31,90 @@
 
 
             <section class="bienvenida">
-                <h2>Bienvenida/o al sistema</h2>
-                <p>Desde aquí podrás gestionar los turnos médicos.</p>
+                <h2>Panel de Administración</h2>
+                <p>Como administrador podés registrar nuevos turnos, filtrar la agenda general y confirmar, reprogramar o cancelar turnos.</p>
+                <p id="mensajeAccion" class="mensaje-accion" role="status" aria-live="polite"></p>
             </section>
 
+            <section class="seccion-turnos">
+                <h2>Asignar nuevo turno</h2>
+                <form id="formNuevoTurno" class="form-grid">
+                    <div>
+                        <label for="dni_paciente">DNI Paciente</label>
+                        <input type="number" id="dni_paciente" placeholder="Ej: 30100101" required>
+                    </div>
+                    <div>
+                        <label for="fecha_turno">Fecha</label>
+                        <input type="date" id="fecha_turno" required>
+                    </div>
+                    <div>
+                        <label for="hora_turno">Hora</label>
+                        <input type="time" id="hora_turno" required>
+                    </div>
+                    <div>
+                        <label for="practica_equipo">Práctica y Equipo</label>
+                        <select id="practica_equipo" required>
+                            <option value="1|15">1 - Consulta clínica (Eq. 15 - Monitor)</option>
+                            <option value="2|15">2 - Control general (Eq. 15 - Monitor)</option>
+                            <option value="3|1">3 - Electrocardiograma (Eq. 1 - ECG 01)</option>
+                            <option value="4|3">4 - Ecocardiograma (Eq. 3 - Ecógrafo 01)</option>
+                            <option value="5|15">5 - Control pediátrico (Eq. 15 - Monitor)</option>
+                            <option value="6|14">6 - Consulta traumatológica (Eq. 14 - Camilla)</option>
+                            <option value="7|6">7 - Radiografía (Eq. 6 - Rayos X)</option>
+                            <option value="8|3">8 - Control ginecológico (Eq. 3 - Ecógrafo 01)</option>
+                            <option value="10|9">10 - Consulta dermatológica (Eq. 9 - Dermatoscopio)</option>
+                            <option value="12|12">12 - Control oftalmológico (Eq. 12 - Oftalmológico)</option>
+                            <option value="14|3">14 - Ecografía abdominal (Eq. 3 - Ecógrafo 01)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="medio_solicitado">Medio solicitado</label>
+                        <select id="medio_solicitado" required>
+                            <option value="Web">Web</option>
+                            <option value="Teléfono">Teléfono</option>
+                            <option value="WhatsApp">WhatsApp</option>
+                        </select>
+                    </div>
+                    <div class="acciones-form">
+                        <button type="submit">Crear Turno</button>
+                    </div>
+                </form>
+            </section>
+
+            <section id="boxReprogramar" class="seccion-turnos" style="display: none;">
+                <h2>Reprogramar Turno #<span id="idTurnoReprogramar"></span></h2>
+                <form id="formReprogramar" class="form-grid">
+                    <div>
+                        <label for="nueva_fecha">Nueva Fecha</label>
+                        <input type="date" id="nueva_fecha" required>
+                    </div>
+                    <div>
+                        <label for="nueva_hora">Nueva Hora</label>
+                        <input type="time" id="nueva_hora" required>
+                    </div>
+                    <div class="acciones-form">
+                        <button type="submit">Guardar cambio</button>
+                        <button type="button" id="btnCancelarReprog" class="btn-secundario">Cancelar</button>
+                    </div>
+                </form>
+            </section>
 
             <section id="turnos" class="seccion-turnos">
-                <h2>Gestión de turnos</h2>
+                <h2>Agenda y Búsqueda de Turnos</h2>
+
+                <form id="formFiltros" class="barra-filtros">
+                    <input type="date" id="filtroFecha" title="Filtrar por fecha">
+                    <select id="filtroEstado">
+                        <option value="">Todos los estados</option>
+                        <option value="Reservado">Reservado</option>
+                        <option value="Confirmado">Confirmado</option>
+                        <option value="Cancelado">Cancelado</option>
+                    </select>
+                    <input type="number" id="filtroDni" placeholder="Filtrar por DNI paciente">
+                    <button type="submit">Filtrar</button>
+                    <button type="button" id="btnLimpiarFiltros" class="btn-secundario">Limpiar</button>
+                </form>
+
                 <div class="tabla-contenedor">
                     <table class="tabla-turnos">
                         <thead>
@@ -47,13 +124,15 @@
                                 <th>Hora</th>
                                 <th>DNI Paciente</th>
                                 <th>Práctica</th>
+                                <th>Equipo</th>
                                 <th>Medio</th>
                                 <th>Estado</th>
+                                <th>Acciones</th>
                             </tr>
                         </thead>
                         <tbody id="tablaTurnosBody">
                             <tr>
-                                <td colspan="7">Cargando turnos...</td>
+                                <td colspan="9">Cargando turnos...</td>
                             </tr>
                         </tbody>
                     </table>

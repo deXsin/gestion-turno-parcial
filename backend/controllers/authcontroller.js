@@ -43,7 +43,9 @@ async function login(req, res) {
             {
                 id_usuario: usuario.id_usuario,
                 email: usuario.email,
-                id_rol: usuario.id_rol
+                id_rol: usuario.id_rol,
+                dni_paciente: usuario.dni_paciente,
+                matricula_medico: usuario.matricula_medico
             },
             process.env.JWT_SECRET,
             { expiresIn: '1h' }

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Portal de Paciente | Gestión de Turnos</title>
+    <link rel="stylesheet" href="../css/estilos.css">
+</head>
+<body>
+    <div class="dashboard">
+        <aside class="sidebar">
+            <h2>Gestión de Turnos</h2>
+            <nav>
+                <a href="paciente.html" class="activo">Mis Turnos</a>
+                <a href="#solicitar">Solicitar Turno</a>
+                <button id="cerrarSesion" type="button">Cerrar sesión</button>
+            </nav>
+        </aside>
+
+        <main class="contenido">
+            <header class="encabezado">
+                <h1>Portal del Paciente</h1>
+                <p id="datosUsuario">Cargando paciente...</p>
+            </header>
+
+            <section class="bienvenida">
+                <h2>Bienvenida/o a tu portal</h2>
+                <p>Aquí podés solicitar un nuevo turno médico y consultar, reprogramar o cancelar tus turnos reservados.</p>
+                <p id="mensajeAccion" class="mensaje-accion" role="status" aria-live="polite"></p>
+            </section>
+
+            <section id="solicitar" class="seccion-turnos">
+                <h2>Solicitar nuevo turno</h2>
+                <form id="formSolicitarTurno" class="form-grid">
+                    <div>
+                        <label for="fecha_turno">Fecha del turno</label>
+                        <input type="date" id="fecha_turno" required>
+                    </div>
+                    <div>
+                        <label for="hora_turno">Hora (L-V 08:00 a 20:00 / Sáb 08:00 a 14:00)</label>
+                        <input type="time" id="hora_turno" required>
+                    </div>
+                    <div>
+                        <label for="practica_equipo">Práctica médica</label>
+                        <select id="practica_equipo" required>
+                            <option value="1|15">Consulta clínica</option>
+                            <option value="2|15">Control general</option>
+                            <option value="3|1">Electrocardiograma</option>
+                            <option value="4|3">Ecocardiograma</option>
+                            <option value="5|15">Control pediátrico</option>
+                            <option value="6|14">Consulta traumatológica</option>
+                            <option value="7|6">Radiografía</option>
+                            <option value="8|3">Control ginecológico</option>
+                            <option value="10|9">Consulta dermatológica</option>
+                            <option value="12|12">Control oftalmológico</option>
+                            <option value="14|3">Ecografía abdominal</option>
+                        </select>
+                    </div>
+                    <div class="acciones-form">
+                        <button type="submit">Reservar Turno</button>
+                    </div>
+                </form>
+            </section>
+
+            <section id="boxReprogramar" class="seccion-turnos" style="display: none;">
+                <h2>Reprogramar mi Turno #<span id="idTurnoReprogramar"></span></h2>
+                <form id="formReprogramar" class="form-grid">
+                    <div>
+                        <label for="nueva_fecha">Nueva Fecha</label>
+                        <input type="date" id="nueva_fecha" required>
+                    </div>
+                    <div>
+                        <label for="nueva_hora">Nueva Hora</label>
+                        <input type="time" id="nueva_hora" required>
+                    </div>
+                    <div class="acciones-form">
+                        <button type="submit">Confirmar nueva fecha</button>
+                        <button type="button" id="btnCancelarReprog" class="btn-secundario">Cancelar</button>
+                    </div>
+                </form>
+            </section>
+
+            <section class="seccion-turnos">
+                <h2>Mis Turnos</h2>
+                <div class="tabla-contenedor">
+                    <table class="tabla-turnos">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Fecha</th>
+                                <th>Hora</th>
+                                <th>Práctica</th>
+                                <th>Medio</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaMisTurnosBody">
+                            <tr>
+                                <td colspan="7">Cargando tus turnos...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script src="../js/paciente.js"></script>
+</body>
+</html>

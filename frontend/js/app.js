@@ -34,14 +34,15 @@ formulario.addEventListener('submit', async function (evento) {
 
         console.log('Login exitoso');
         console.log('Usuario:', datos.usuario);
-        console.log('URL antes de redirigir:', window.location.href);
-        window.location.href = 'pages/dashboard.html';
 
-
-
-
-        // Redirigir al panel
-       // window.location.href = 'pages/dashboard.html';
+        const rol = Number(datos.usuario.id_rol);
+        if (rol === 1) {
+            window.location.href = 'pages/dashboard.html';
+        } else if (rol === 2) {
+            window.location.href = 'pages/medico.html';
+        } else {
+            window.location.href = 'pages/paciente.html';
+        }
 
 
     } catch (error) {
