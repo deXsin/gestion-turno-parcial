@@ -1,5 +1,18 @@
 const db = require('../config/database');
 
+function obtenerFechaHoraActual() {
+    const ahora = new Date();
+    const anio = ahora.getFullYear();
+    const mes = String(ahora.getMonth() + 1).padStart(2, '0');
+    const dia = String(ahora.getDate()).padStart(2, '0');
+    const horas = String(ahora.getHours()).padStart(2, '0');
+    const minutos = String(ahora.getMinutes()).padStart(2, '0');
+    return {
+        hoy: `${anio}-${mes}-${dia}`,
+        horaActual: `${horas}:${minutos}`
+    };
+}
+
 // Recibe los datos del body
 async function validarNuevoTurno(datos) {
     const {
@@ -12,10 +25,18 @@ async function validarNuevoTurno(datos) {
         return { valido: false, status: 400, error: 'Todos los campos obligatorios deben estar presentes' };
     }
 
-    // 2. Fecha no anterior al día actual
-    const hoy = new Date().toISOString().split('T')[0];
+    // Validar formato de DNI (7 u 8 dígitos numéricos)
+    if (!/^\d{7,8}$/.test(String(dni_paciente).trim())) {
+        return { valido: false, status: 400, error: 'El DNI del paciente debe tener entre 7 y 8 dígitos numéricos' };
+    }
+
+    // 2. Fecha y hora no anteriores al momento actual (hora local Argentina)
+    const { hoy, horaActual } = obtenerFechaHoraActual();
     if (fecha_turno < hoy) {
         return { valido: false, status: 400, error: 'La fecha del turno no puede ser anterior al día de hoy' };
+    }
+    if (fecha_turno === hoy && hora_turno.slice(0, 5) <= horaActual) {
+        return { valido: false, status: 400, error: 'Para el día de hoy debés elegir un horario posterior a la hora actual' };
     }
 
     // 3. Franja horaria de atención
@@ -77,9 +98,12 @@ async function validarReprogramacionTurno(turnoActual, nuevaFecha, nuevaHora) {
         return { valido: false, status: 400, error: 'Debés indicar la nueva fecha y el nuevo horario' };
     }
 
-    const hoy = new Date().toISOString().split('T')[0];
+    const { hoy, horaActual } = obtenerFechaHoraActual();
     if (nuevaFecha < hoy) {
         return { valido: false, status: 400, error: 'La fecha del turno no puede ser anterior al día de hoy' };
+    }
+    if (nuevaFecha === hoy && nuevaHora.slice(0, 5) <= horaActual) {
+        return { valido: false, status: 400, error: 'Para el día de hoy debés elegir un horario posterior a la hora actual' };
     }
 
     const diaSemana = new Date(`${nuevaFecha}T00:00:00`).getDay();

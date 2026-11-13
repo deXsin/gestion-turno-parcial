@@ -20,6 +20,10 @@ datosUsuario.textContent = `Paciente: ${usuario.email} | DNI: ${usuario.dni_paci
 const mensajeAccion = document.getElementById('mensajeAccion');
 let turnoSeleccionadoReprog = null;
 
+const hoyMin = obtenerHoyInput();
+document.getElementById('fecha_turno').setAttribute('min', hoyMin);
+document.getElementById('nueva_fecha').setAttribute('min', hoyMin);
+
 function mostrarMensaje(texto, esError = false) {
     mensajeAccion.textContent = texto;
     mensajeAccion.style.color = esError ? '#c62828' : '#155724';
@@ -36,41 +40,50 @@ document.getElementById('cerrarSesion').addEventListener('click', function () {
 async function cargarMisTurnos() {
     const tablaBody = document.getElementById('tablaMisTurnosBody');
     if (!usuario.dni_paciente) {
-        tablaBody.innerHTML = '<tr><td colspan="7" style="color: red;">Volvé a iniciar sesión para actualizar los datos de tu DNI.</td></tr>';
+        tablaBody.innerHTML = '<tr><td colspan="6" style="color: red;">Volvé a iniciar sesión para actualizar los datos de tu DNI.</td></tr>';
         return;
     }
 
     try {
         const turnos = await obtenerTurnosPorPaciente(usuario.dni_paciente);
         if (turnos.length === 0) {
-            tablaBody.innerHTML = '<tr><td colspan="7">Todavía no tenés turnos registrados.</td></tr>';
+            tablaBody.innerHTML = '<tr><td colspan="6">Todavía no tenés turnos registrados.</td></tr>';
             return;
         }
 
         let filasHtml = '';
         turnos.forEach(turno => {
-            const fecha = turno.fecha_turno ? turno.fecha_turno.split('T')[0] : '-';
-            const cancelado = turno.estado_turno === 'Cancelado';
+            const fechaIso = turno.fecha_turno ? turno.fecha_turno.split('T')[0] : '';
+            const fechaMostrar = formatearFechaArgentina(fechaIso);
+            const estado = turno.estado_turno || '-';
+
+            let botonesHtml = '<span class="sin-acciones">Sin acciones</span>';
+            if (estado === 'Reservado') {
+                botonesHtml = `
+                    <button type="button" class="btn-tabla btn-reprogramar" onclick="abrirReprogramar(${turno.id_turno}, '${fechaIso}', '${turno.hora_turno}')">Reprogramar</button>
+                    <button type="button" class="btn-tabla btn-cancelar" onclick="cancelarMiTurno(${turno.id_turno})">Cancelar</button>
+                `;
+            } else if (estado === 'Confirmado') {
+                botonesHtml = `
+                    <button type="button" class="btn-tabla btn-cancelar" onclick="cancelarMiTurno(${turno.id_turno})">Cancelar</button>
+                `;
+            }
 
             filasHtml += `
                 <tr>
-                    <td>${turno.id_turno}</td>
-                    <td>${fecha}</td>
+                    <td>${fechaMostrar}</td>
                     <td>${turno.hora_turno}</td>
                     <td>#${turno.id_practica} ${turno.nombre_practica ? '- ' + turno.nombre_practica : ''}</td>
                     <td>${turno.medio_solicitado || 'Web'}</td>
-                    <td><span class="estado estado-${(turno.estado_turno || '').toLowerCase()}">${turno.estado_turno || '-'}</span></td>
-                    <td class="celda-acciones">
-                        <button type="button" class="btn-tabla btn-reprogramar" onclick="abrirReprogramar(${turno.id_turno}, '${fecha}', '${turno.hora_turno}')" ${cancelado ? 'disabled' : ''}>Reprogramar</button>
-                        <button type="button" class="btn-tabla btn-cancelar" onclick="cancelarMiTurno(${turno.id_turno})" ${cancelado ? 'disabled' : ''}>Cancelar</button>
-                    </td>
+                    <td><span class="estado estado-${estado.toLowerCase()}">${estado}</span></td>
+                    <td class="celda-acciones">${botonesHtml}</td>
                 </tr>
             `;
         });
 
         tablaBody.innerHTML = filasHtml;
     } catch (error) {
-        tablaBody.innerHTML = `<tr><td colspan="7" style="color: red;">Error: ${error.message}</td></tr>`;
+        tablaBody.innerHTML = `<tr><td colspan="6" style="color: red;">Error: ${error.message}</td></tr>`;
     }
 }
 

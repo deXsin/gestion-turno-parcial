@@ -99,9 +99,9 @@ async function cancelarTurno(req, res) {
             }
         }
 
-        // Impedir que se modifique/cancele un turno que ya fue cancelado
-        if (turnoActual.estado_turno === 'Cancelado') {
-            return res.status(400).json({ error: 'No se puede cancelar un turno que ya fue cancelado' });
+        // Impedir que se modifique/cancele un turno que ya fue cancelado o expiró
+        if (turnoActual.estado_turno === 'Cancelado' || turnoActual.estado_turno === 'Expirado') {
+            return res.status(400).json({ error: `No se puede cancelar un turno en estado ${turnoActual.estado_turno}` });
         }
 
         await turnoService.cancelar(id);
@@ -150,9 +150,9 @@ async function confirmarTurno(req, res) {
 
         const turnoActual = turnos[0];
 
-        // Impedir que se modifique un turno que ya fue cancelado
-        if (turnoActual.estado_turno === 'Cancelado') {
-            return res.status(400).json({ error: 'No se puede confirmar un turno que ya fue cancelado' });
+        // Impedir que se modifique un turno que ya fue cancelado o expiró
+        if (turnoActual.estado_turno === 'Cancelado' || turnoActual.estado_turno === 'Expirado') {
+            return res.status(400).json({ error: `No se puede confirmar un turno en estado ${turnoActual.estado_turno}` });
         }
 
         if (turnoActual.estado_turno === 'Confirmado') {
@@ -198,9 +198,9 @@ async function reprogramarTurno(req, res) {
             }
         }
 
-        // Impedir que se modifique un turno que ya fue cancelado
-        if (turnoActual.estado_turno === 'Cancelado') {
-            return res.status(400).json({ error: 'No se puede reprogramar un turno que ya fue cancelado' });
+        // Impedir que se modifique un turno que ya fue cancelado o expiró
+        if (turnoActual.estado_turno === 'Cancelado' || turnoActual.estado_turno === 'Expirado') {
+            return res.status(400).json({ error: `No se puede reprogramar un turno en estado ${turnoActual.estado_turno}` });
         }
 
         const validacion = await validarReprogramacionTurno(turnoActual, fecha_turno, hora_turno);

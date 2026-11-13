@@ -38,6 +38,7 @@
                         <option value="Reservado">Reservado</option>
                         <option value="Confirmado">Confirmado</option>
                         <option value="Cancelado">Cancelado</option>
+                        <option value="Expirado">Expirado</option>
                     </select>
                     <input type="number" id="filtroDni" placeholder="DNI del paciente">
                     <button type="submit">Filtrar</button>
@@ -48,7 +49,6 @@
                     <table class="tabla-turnos">
                         <thead>
                             <tr>
-                                <th>ID</th>
                                 <th>Fecha</th>
                                 <th>Hora</th>
                                 <th>DNI Paciente</th>
@@ -60,7 +60,7 @@
                         </thead>
                         <tbody id="tablaTurnosBody">
                             <tr>
-                                <td colspan="8">Cargando turnos...</td>
+                                <td colspan="7">Cargando turnos...</td>
                             </tr>
                         </tbody>
                     </table>

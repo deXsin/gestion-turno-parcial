@@ -238,6 +238,17 @@ button:disabled {
     color: #721c24;
 }
 
+.estado-expirado {
+    background: #e2e3e5;
+    color: #383d41;
+}
+
+.sin-acciones {
+    color: #888;
+    font-size: 12px;
+    font-style: italic;
+}
+
 /* Formularios del panel, filtros y botones de tabla */
 .form-grid {
     display: grid;

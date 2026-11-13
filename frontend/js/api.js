@@ -167,3 +167,27 @@ async function verificarCorreo(token) {
     }
     return datos;
 }
+
+// Formatea '2026-12-12' a 'Sábado 12/12/2026'
+function formatearFechaArgentina(fechaIso) {
+    if (!fechaIso) return '-';
+    const limpia = fechaIso.split('T')[0];
+    const partes = limpia.split('-').map(Number);
+    if (partes.length !== 3) return limpia;
+    const [anio, mes, dia] = partes;
+    const diasSemana = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+    const fechaObj = new Date(anio, mes - 1, dia);
+    const nombreDia = diasSemana[fechaObj.getDay()];
+    const dd = String(dia).padStart(2, '0');
+    const mm = String(mes).padStart(2, '0');
+    return `${nombreDia} ${dd}/${mm}/${anio}`;
+}
+
+// Devuelve la fecha local de hoy en formato YYYY-MM-DD para el atributo min de los input date
+function obtenerHoyInput() {
+    const hoy = new Date();
+    const anio = hoy.getFullYear();
+    const mes = String(hoy.getMonth() + 1).padStart(2, '0');
+    const dia = String(hoy.getDate()).padStart(2, '0');
+    return `${anio}-${mes}-${dia}`;
+}

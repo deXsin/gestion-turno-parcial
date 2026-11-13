@@ -37,36 +37,44 @@ async function cargarTurnosMedico(filtros = {}) {
     try {
         const turnos = await obtenerTurnos(filtros);
         if (turnos.length === 0) {
-            tablaBody.innerHTML = '<tr><td colspan="8">No hay turnos para mostrar.</td></tr>';
+            tablaBody.innerHTML = '<tr><td colspan="7">No hay turnos para mostrar.</td></tr>';
             return;
         }
 
         let filasHtml = '';
         turnos.forEach(turno => {
-            const fecha = turno.fecha_turno ? turno.fecha_turno.split('T')[0] : '-';
-            const cancelado = turno.estado_turno === 'Cancelado';
-            const confirmado = turno.estado_turno === 'Confirmado';
+            const fechaIso = turno.fecha_turno ? turno.fecha_turno.split('T')[0] : '';
+            const fechaMostrar = formatearFechaArgentina(fechaIso);
+            const estado = turno.estado_turno || '-';
+
+            let botonesHtml = '<span class="sin-acciones">Sin acciones</span>';
+            if (estado === 'Reservado') {
+                botonesHtml = `
+                    <button type="button" class="btn-tabla btn-confirmar" onclick="confirmarComoMedico(${turno.id_turno})">Confirmar</button>
+                    <button type="button" class="btn-tabla btn-cancelar" onclick="cancelarComoMedico(${turno.id_turno})">Cancelar</button>
+                `;
+            } else if (estado === 'Confirmado') {
+                botonesHtml = `
+                    <button type="button" class="btn-tabla btn-cancelar" onclick="cancelarComoMedico(${turno.id_turno})">Cancelar</button>
+                `;
+            }
 
             filasHtml += `
                 <tr>
-                    <td>${turno.id_turno}</td>
-                    <td>${fecha}</td>
+                    <td>${fechaMostrar}</td>
                     <td>${turno.hora_turno}</td>
                     <td>${turno.dni_paciente}</td>
                     <td>#${turno.id_practica} ${turno.nombre_practica ? '- ' + turno.nombre_practica : ''}</td>
-                    <td><span class="estado estado-${(turno.estado_turno || '').toLowerCase()}">${turno.estado_turno || '-'}</span></td>
+                    <td><span class="estado estado-${estado.toLowerCase()}">${estado}</span></td>
                     <td>${turno.medico_confirmacion || '-'}</td>
-                    <td class="celda-acciones">
-                        <button type="button" class="btn-tabla btn-confirmar" onclick="confirmarComoMedico(${turno.id_turno})" ${cancelado || confirmado ? 'disabled' : ''}>Confirmar</button>
-                        <button type="button" class="btn-tabla btn-cancelar" onclick="cancelarComoMedico(${turno.id_turno})" ${cancelado ? 'disabled' : ''}>Cancelar</button>
-                    </td>
+                    <td class="celda-acciones">${botonesHtml}</td>
                 </tr>
             `;
         });
 
         tablaBody.innerHTML = filasHtml;
     } catch (error) {
-        tablaBody.innerHTML = `<tr><td colspan="8" style="color: red;">Error: ${error.message}</td></tr>`;
+        tablaBody.innerHTML = `<tr><td colspan="7" style="color: red;">Error: ${error.message}</td></tr>`;
     }
 }
 

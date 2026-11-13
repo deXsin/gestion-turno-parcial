@@ -1,7 +1,35 @@
 const db = require('../config/database');
 
+let acentosCorregidos = false;
+
+// Actualiza automáticamente a 'Expirado' los turnos cuya fecha/hora ya pasó y corrige tildes si se importaron con '??'
+async function actualizarTurnosExpirados() {
+    if (!acentosCorregidos) {
+        const practicasLimpias = [
+            [1, 'Consulta clínica'], [5, 'Control pediátrico'], [6, 'Consulta traumatológica'],
+            [7, 'Radiografía'], [8, 'Control ginecológico'], [10, 'Consulta dermatológica'],
+            [11, 'Dermatoscopía'], [12, 'Control oftalmológico'], [14, 'Ecografía abdominal'],
+            [15, 'Ecografía obstétrica'], [16, 'Tomografía computada'], [17, 'Resonancia magnética'],
+            [18, 'Consulta cardiológica'], [19, 'Control de niño sano'], [20, 'Ecografía musculoesquelética']
+        ];
+        for (const [id, nombre] of practicasLimpias) {
+            await db.execute('UPDATE practica SET nombre_practica = ? WHERE id_practica = ? AND nombre_practica LIKE "%?%"', [nombre, id]);
+        }
+        await db.execute("UPDATE turno SET medio_solicitado = 'Teléfono' WHERE medio_solicitado LIKE 'Tel%fono'");
+        acentosCorregidos = true;
+    }
+
+    await db.execute(`
+        UPDATE turno
+        SET estado_turno = 'Expirado'
+        WHERE (fecha_turno < CURDATE() OR (fecha_turno = CURDATE() AND hora_turno < CURTIME()))
+          AND estado_turno NOT IN ('Cancelado', 'Expirado')
+    `);
+}
+
 // 1. OBTENER TODOS (con filtros opcionales y filtro por especialidad del médico)
 async function obtenerTodos(filtros = {}) {
+    await actualizarTurnosExpirados();
     let sql = `
         SELECT t.*, p.nombre_practica
         FROM turno t
@@ -37,6 +65,7 @@ async function obtenerTodos(filtros = {}) {
 
 // 2. OBTENER POR ID
 async function obtenerPorId(id) {
+    await actualizarTurnosExpirados();
     const [turnos] = await db.execute(
         'SELECT * FROM turno WHERE id_turno = ?',
         [id]
@@ -75,6 +104,7 @@ async function cancelar(id_turno) {
 
 //5. OBTENER TURNOS POR PACIENTE
 async function obtenerPorPaciente(dni_paciente) {
+    await actualizarTurnosExpirados();
     const [turnos] = await db.execute(
         `SELECT t.*, p.nombre_practica
          FROM turno t

@@ -20,6 +20,10 @@ datosUsuario.textContent = `Usuario: ${usuario.email} | Perfil: Administrador (R
 const mensajeAccion = document.getElementById('mensajeAccion');
 let turnoSeleccionadoReprog = null;
 
+const hoyMin = obtenerHoyInput();
+document.getElementById('fecha_turno').setAttribute('min', hoyMin);
+document.getElementById('nueva_fecha').setAttribute('min', hoyMin);
+
 function mostrarMensaje(texto, esError = false) {
     mensajeAccion.textContent = texto;
     mensajeAccion.style.color = esError ? '#c62828' : '#155724';
@@ -47,25 +51,34 @@ async function cargarTurnos(filtros = {}) {
 
         let filasHtml = '';
         turnos.forEach(turno => {
-            const fecha = turno.fecha_turno ? turno.fecha_turno.split('T')[0] : '-';
-            const cancelado = turno.estado_turno === 'Cancelado';
-            const confirmado = turno.estado_turno === 'Confirmado';
+            const fechaIso = turno.fecha_turno ? turno.fecha_turno.split('T')[0] : '';
+            const fechaMostrar = formatearFechaArgentina(fechaIso);
+            const estado = turno.estado_turno || '-';
+
+            let botonesHtml = '<span class="sin-acciones">Sin acciones</span>';
+            if (estado === 'Reservado') {
+                botonesHtml = `
+                    <button type="button" class="btn-tabla btn-confirmar" onclick="accionConfirmar(${turno.id_turno})">Confirmar</button>
+                    <button type="button" class="btn-tabla btn-reprogramar" onclick="abrirReprogramar(${turno.id_turno}, '${fechaIso}', '${turno.hora_turno}')">Reprogramar</button>
+                    <button type="button" class="btn-tabla btn-cancelar" onclick="accionCancelar(${turno.id_turno})">Cancelar</button>
+                `;
+            } else if (estado === 'Confirmado') {
+                botonesHtml = `
+                    <button type="button" class="btn-tabla btn-cancelar" onclick="accionCancelar(${turno.id_turno})">Cancelar</button>
+                `;
+            }
 
             filasHtml += `
                 <tr>
                     <td>${turno.id_turno}</td>
-                    <td>${fecha}</td>
+                    <td>${fechaMostrar}</td>
                     <td>${turno.hora_turno}</td>
                     <td>${turno.dni_paciente}</td>
                     <td>#${turno.id_practica} ${turno.nombre_practica ? '- ' + turno.nombre_practica : ''}</td>
                     <td>#${turno.id_equipo || '-'}</td>
                     <td>${turno.medio_solicitado || '-'}</td>
-                    <td><span class="estado estado-${(turno.estado_turno || '').toLowerCase()}">${turno.estado_turno || '-'}</span></td>
-                    <td class="celda-acciones">
-                        <button type="button" class="btn-tabla btn-confirmar" onclick="accionConfirmar(${turno.id_turno})" ${cancelado || confirmado ? 'disabled' : ''}>Confirmar</button>
-                        <button type="button" class="btn-tabla btn-reprogramar" onclick="abrirReprogramar(${turno.id_turno}, '${fecha}', '${turno.hora_turno}')" ${cancelado ? 'disabled' : ''}>Reprogramar</button>
-                        <button type="button" class="btn-tabla btn-cancelar" onclick="accionCancelar(${turno.id_turno})" ${cancelado ? 'disabled' : ''}>Cancelar</button>
-                    </td>
+                    <td><span class="estado estado-${estado.toLowerCase()}">${estado}</span></td>
+                    <td class="celda-acciones">${botonesHtml}</td>
                 </tr>
             `;
         });

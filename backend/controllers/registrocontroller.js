@@ -37,9 +37,9 @@ async function registrarPaciente(req, res) {
         const dni = Number(dni_paciente);
         const correo = email.trim().toLowerCase();
 
-        if (!Number.isSafeInteger(dni) || dni <= 0) {
+        if (!Number.isSafeInteger(dni) || dni <= 0 || !/^\d{7,8}$/.test(String(dni_paciente).trim())) {
             return res.status(400).json({
-                error: 'El DNI no es válido'
+                error: 'El DNI no es válido (debe tener entre 7 y 8 dígitos numéricos)'
             });
         }
 
