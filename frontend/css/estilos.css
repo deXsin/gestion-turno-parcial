@@ -311,15 +311,15 @@ button:disabled {
 }
 
 .celda-acciones {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
+    white-space: nowrap;
+    vertical-align: middle;
 }
 
 .btn-tabla {
     padding: 6px 10px;
     font-size: 12px;
     border-radius: 4px;
+    margin-right: 4px;
 }
 
 .btn-confirmar {
